@@ -1,29 +1,46 @@
 import express from "express";
 import dotenv from "dotenv";
-dotenv.config();
-import cors from "cors"
-import { connectDB } from "./src/lib/db.js";
 import cookieParser from "cookie-parser";
-const app = express();
+import cors from "cors";
 
-//input route
+import path from "path";
+
 import authRoutes from "./src/routes/auth.route.js";
 import messageRoutes from "./src/routes/message.route.js";
+import { app, server } from "./src/lib/socket.js";
+import { connectDB } from "./src/lib/db.js";
 
-// Add middleware to parse JSON requests
+dotenv.config();
+
+const PORT = process.env.PORT;
+const __dirname = path.resolve();
+
 app.use(express.json());
-app.use(cors())
-app.use(cookieParser())
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: ["*", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 
+//database connect
 const uri = process.env.MONGODB_URL;
-
-//database connection 
-connectDB({uri})
+connectDB({ uri });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/message", messageRoutes);
+app.use("/api/messages", messageRoutes);
 
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../Chat-Frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(
+      path.join(__dirname, "../Chat-Frontend", "dist", "index.html")
+    );
+  });
+}
+
+server.listen(PORT, () => {
+  console.log("server is running on PORT:" + PORT);
 });

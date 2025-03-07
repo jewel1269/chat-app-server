@@ -6,6 +6,7 @@ import cloudinary from "../lib/cloudinary.js";
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
+    console.log(fullName, email, password);
 
     if (password.length < 6) {
       return res.status(400).json({
@@ -114,9 +115,11 @@ export const logout = async (req, res) => {
   }
 };
 
+
 export const updateProfile = async (req, res) => {
   try {
-    const { avatar } = req.body;
+    const  {avatar}  = req.body;
+    console.log(avatar);
     const userId = req.user._id;
 
     if (!avatar) {
@@ -126,11 +129,9 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(avatar);
-
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { avatar: uploadResponse.secure_url },
+      { avatar: avatar },
       { new: true }
     ).select("-password");
 
